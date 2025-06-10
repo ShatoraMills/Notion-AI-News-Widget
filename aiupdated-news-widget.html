@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI News Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .widget-container {
+      max-width: 28rem;
+      width: 100%;
+      background-color: black;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(253, 242, 248, 0.7),
+                  0 0 40px rgba(253, 242, 248, 0.4),
+                  inset 0 0 10px rgba(253, 242, 248, 0.3);
+      background-color: #0a0a0f;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(253, 242, 248, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(253, 242, 248, 0.08) 0%, transparent 25%);
+    }
+
+    .title-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .pink-cyber-glow {
+      text-shadow: 0 0 5px #fdf2f8, 0 0 10px #fdf2f8, 0 0 15px #fdf2f8;
+    }
+
+    .header {
+      padding: 1.25rem;
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      background: linear-gradient(to bottom right, #fce7f3, #f9a8d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(253, 242, 248, 0.7),
+                  0 0 40px rgba(253, 242, 248, 0.4),
+                  inset 0 0 10px rgba(253, 242, 248, 0.3);
+    }
+
+    .logo svg {
+      height: 1.25rem;
+      width: 1.25rem;
+      color: white;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: white;
+      letter-spacing: 0.05em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .live-indicator {
+      margin-left: 1.5rem;
+      font-size: 0.75rem;
+      color: #fce7f3;
+    }
+
+    .dot-pulse {
+      position: relative;
+      left: -9999px;
+      width: 6px;
+      height: 6px;
+      border-radius: 5px;
+      background-color: #fdf2f8;
+      color: #fdf2f8;
+      box-shadow: 0 0 15px #fdf2f8;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0.25s;
+    }
+
+    .dot-pulse::before, .dot-pulse::after {
+      content: '';
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 5px;
+      background-color: #fdf2f8;
+      box-shadow: 0 0 15px #fdf2f8;
+    }
+
+    .dot-pulse::before {
+      left: -12px;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0s;
+    }
+
+    .dot-pulse::after {
+      left: 12px;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes dot-pulse {
+      0% { box-shadow: 0 0 15px #fdf2f8; }
+      50% { 
+        box-shadow: 0 0 25px #fdf2f8, 0 0 40px rgba(253, 242, 248, 0.5);
+        background-color: #fff5fb;
+      }
+      100% { box-shadow: 0 0 15px #fdf2f8; }
+    }
+
+    .news-feed {
+      background-color: #0a0a0f;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(253, 242, 248, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(253, 242, 248, 0.08) 0%, transparent 25%);
+    }
+
+    .loading-indicator {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 1.25rem;
+    }
+
+    .loading-indicator.show {
+      display: flex;
+    }
+
+    .loading-text {
+      margin-left: 1.5rem;
+      font-size: 0.75rem;
+      color: #fce7f3;
+    }
+
+    .news-item {
+      padding: 1rem;
+      border-left: 3px solid transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .news-item:not(:last-child) {
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+    }
+
+    .news-item:hover {
+      background-color: rgba(253, 242, 248, 0.1);
+      border-left: 3px solid #fdf2f8;
+      box-shadow: inset 0 0 10px rgba(253, 242, 248, 0.2);
+    }
+
+    .news-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .news-text {
+      flex: 1;
+      padding-right: 0.5rem;
+    }
+
+    .news-title {
+      color: white;
+      font-weight: 500;
+      font-size: 0.875rem;
+      line-height: 1.25;
+      margin-bottom: 0.25rem;
+    }
+
+    .news-summary {
+      color: #9ca3af;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .time-badge {
+      font-size: 0.75rem;
+      color: #fce7f3;
+      white-space: nowrap;
+      background: linear-gradient(90deg, rgba(253, 242, 248, 0.2), rgba(253, 242, 248, 0.1));
+      border: 1px solid rgba(253, 242, 248, 0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .footer {
+      padding: 1rem;
+      background-color: #0a0a0f;
+      border-top: 1px solid rgba(253, 242, 248, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .refresh-btn {
+      color: #fce7f3;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      color: white;
+    }
+
+    .refresh-btn svg {
+      height: 1rem;
+      width: 1rem;
+      margin-right: 0.25rem;
+      transition: transform 0.5s ease;
+    }
+
+    .refresh-btn.spinning svg {
+      transform: rotate(360deg);
+    }
+
+    .view-all-btn {
+      background: linear-gradient(to right, #fce7f3, #f9a8d4);
+      color: white;
+      padding: 0.375rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.025em;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .view-all-btn:hover {
+      background: linear-gradient(to right, #f9a8d4, #fce7f3);
+      box-shadow: 0 0 20px rgba(253, 242, 248, 0.7);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background-color: #0a0a0f;
+      border-radius: 0.75rem;
+      max-width: 90%;
+      width: 37.5rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      padding: 1.5rem;
+      box-shadow: 0 0 20px rgba(253, 242, 248, 0.7),
+                  0 0 40px rgba(253, 242, 248, 0.4),
+                  inset 0 0 10px rgba(253, 242, 248, 0.3);
+    }
+
+    .modal.show .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      color: white;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      color: #fce7f3;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: white;
+    }
+
+    .close-btn svg {
+      height: 1.5rem;
+      width: 1.5rem;
+    }
+
+    .modal-meta {
+      margin-bottom: 1rem;
+    }
+
+    .modal-time {
+      font-size: 0.75rem;
+      color: #fce7f3;
+      background: linear-gradient(90deg, rgba(253, 242, 248, 0.2), rgba(253, 242, 248, 0.1));
+      border: 1px solid rgba(253, 242, 248, 0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .modal-source {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-left: 0.5rem;
+    }
+
+    .modal-body {
+      color: #d1d5db;
+    }
+
+    .modal-body p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .all-news-container {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .all-news-item {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .all-news-item:hover {
+      background-color: rgba(253, 242, 248, 0.1);
+    }
+
+    .all-news-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .all-news-text {
+      flex: 1;
+      padding-right: 1rem;
+    }
+
+    .all-news-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .all-news-source {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    @media (max-width: 640px) {
+      .widget-container {
+        max-width: 100%;
+        margin: 0.5rem;
+      }
+      
+      .modal-content {
+        max-width: 95%;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <h1 class="title pink-cyber-glow title-font">AI PULSE</h1>
+        </div>
+        <div class="header-right">
+          <div class="dot-pulse"></div>
+          <span class="live-indicator pink-cyber-glow title-font">LIVE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Feed -->
+    <div class="news-feed" id="newsFeed">
+      <div class="loading-indicator" id="loadingIndicator">
+        <div class="dot-pulse"></div>
+        <span class="loading-text">Loading news...</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button class="refresh-btn pink-cyber-glow" id="refreshBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span id="refreshText">Refresh</span>
+      </button>
+      <button class="view-all-btn title-font" id="viewAllBtn">
+        View All
+      </button>
+    </div>
+  </div>
+
+  <!-- Article Modal -->
+  <div class="modal" id="articleModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title pink-cyber-glow" id="modalTitle"></h2>
+        <button class="close-btn" id="closeModal">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-meta">
+        <span class="modal-time" id="modalTime"></span>
+        <span class="modal-source" id="modalSource"></span>
+      </div>
+      <div class="modal-body" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- All News Modal -->
+  <div class="modal" id="allNewsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title pink-cyber-glow title-font">All AI News</h2>
+        <button class="close-btn" id="closeAllNews">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="all-news-container" id="allNewsContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    // News data
+    const newsData = [
+      {
+        id: 1,
+        title: "OpenAI Announces GPT-5 Development",
+        summary: "Next-generation model promises significant improvements in reasoning and multimodal capabilities.",
+        time: "2h ago",
+        source: "OpenAI Research",
+        content: [
+          "OpenAI has officially announced the development of GPT-5, their next-generation language model that promises to deliver unprecedented capabilities in artificial intelligence. The announcement came during a private investor meeting, with details later confirmed by CEO Sam Altman.",
+          "According to internal sources, GPT-5 will feature enhanced reasoning capabilities, improved factual accuracy, and more sophisticated multimodal processing. The model is expected to handle complex mathematical proofs, generate more coherent long-form content, and demonstrate better understanding of context across extended conversations.",
+          "The development timeline suggests a potential release in late 2024, though OpenAI emphasizes that safety testing and alignment research will determine the final launch date. The company has committed to extensive red-teaming and safety evaluations before any public release."
+        ]
+      },
+      {
+        id: 2,
+        title: "Apple Intelligence Expands to More Devices",
+        summary: "Apple's on-device AI capabilities now available across iPad and Mac lineup with enhanced privacy features.",
+        time: "4h ago",
+        source: "Apple Machine Learning",
+        content: [
+          "Apple has announced a significant expansion of Apple Intelligence, bringing advanced AI capabilities to more devices in their ecosystem. The update includes enhanced Siri functionality, improved text summarization, and advanced image recognition across iPad and Mac devices.",
+          "The new features leverage Apple's custom neural engines and focus heavily on on-device processing to maintain user privacy. Unlike cloud-based AI services, Apple Intelligence performs most computations locally, ensuring that personal data never leaves the device.",
+          "Key improvements include more natural conversation with Siri, automatic email categorization, and enhanced photo search capabilities. The system can now understand context across apps, allowing for more seamless task completion and better user assistance."
+        ]
+      },
+      {
+        id: 3,
+        title: "AWS Launches New ML Training Platform",
+        summary: "Amazon Web Services introduces comprehensive machine learning platform with automated model optimization.",
+        time: "6h ago",
+        source: "AWS Machine Learning",
+        content: [
+          "Amazon Web Services has unveiled a new comprehensive machine learning platform designed to simplify the process of training and deploying AI models. The platform, called ML Studio Pro, offers automated hyperparameter tuning, distributed training capabilities, and integrated model monitoring.",
+          "The service addresses common pain points in machine learning development, including resource management, experiment tracking, and model versioning. ML Studio Pro can automatically scale training jobs across multiple GPU instances and provides real-time cost optimization recommendations.",
+          "Early adopters report significant reductions in training time and improved model performance. The platform integrates seamlessly with existing AWS services and supports popular frameworks including PyTorch, TensorFlow, and Hugging Face Transformers."
+        ]
+      },
+      {
+        id: 4,
+        title: "MIT Breakthrough in AI Reasoning",
+        summary: "Researchers develop new architecture that enables AI systems to explain their decision-making process.",
+        time: "8h ago",
+        source: "MIT AI Research",
+        content: [
+          "MIT researchers have achieved a significant breakthrough in AI interpretability with the development of a new neural architecture that can provide detailed explanations for its reasoning process. The system, called ExplainNet, generates human-readable justifications for its decisions.",
+          "The research addresses one of the most pressing challenges in AI deployment: the 'black box' problem where complex models make decisions that humans cannot understand or verify. ExplainNet maintains competitive performance while providing step-by-step reasoning traces.",
+          "Initial testing shows the system can explain its decisions across various domains including medical diagnosis, financial analysis, and legal document review. The researchers believe this breakthrough could accelerate AI adoption in critical applications where transparency is essential."
+        ]
+      },
+      {
+        id: 5,
+        title: "Google DeepMind's New Protein Folding Model",
+        summary: "AlphaFold 3 achieves unprecedented accuracy in predicting protein structures and interactions.",
+        time: "12h ago",
+        source: "DeepMind Research",
+        content: [
+          "Google DeepMind has released AlphaFold 3, the latest version of their groundbreaking protein structure prediction system. The new model demonstrates remarkable improvements in accuracy and can now predict complex protein interactions with other molecules.",
+          "AlphaFold 3 represents a significant advance over previous versions, achieving near-experimental accuracy for protein-protein interactions and showing promising results for protein-DNA and protein-RNA binding prediction. This capability could revolutionize drug discovery and our understanding of biological processes.",
+          "The model has already been used to identify potential drug targets for several rare diseases and has provided insights into antibiotic resistance mechanisms. DeepMind has made the system freely available to academic researchers worldwide through their online platform."
+        ]
+      },
+      {
+        id: 6,
+        title: "AI Chip Shortage Drives Innovation",
+        summary: "Semiconductor companies announce new architectures specifically designed for transformer models.",
+        time: "1d ago",
+        source: "Tech Industry News",
+        content: [
+          "The ongoing shortage of AI-optimized chips has sparked a wave of innovation in semiconductor design, with several companies announcing new architectures specifically tailored for transformer-based models. These specialized chips promise significant improvements in both performance and energy efficiency.",
+          "Leading semiconductor manufacturers are moving beyond traditional GPU architectures to create processors that can handle the specific computational patterns of large language models more efficiently. Early benchmarks suggest these chips could reduce training costs by up to 60%.",
+          "The development represents a shift from general-purpose AI acceleration to task-specific optimization. Industry analysts predict these specialized chips will become the standard for AI training and inference within the next two years."
+        ]
+      }
+    ];
+
+    // DOM elements
+    const newsFeed = document.getElementById('newsFeed');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshText = document.getElementById('refreshText');
+    const viewAllBtn = document.getElementById('viewAllBtn');
+    const articleModal = document.getElementById('articleModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalTime = document.getElementById('modalTime');
+    const modalSource = document.getElementById('modalSource');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.getElementById('closeModal');
+    const allNewsModal = document.getElementById('allNewsModal');
+    const allNewsContainer = document.getElementById('allNewsContainer');
+    const closeAllNews = document.getElementById('closeAllNews');
+
+    // Functions
+    function showLoading() {
+      newsFeed.innerHTML = '';
+      loadingIndicator.classList.add('show');
+      newsFeed.appendChild(loadingIndicator);
+    }
+
+    function hideLoading() {
+      loadingIndicator.classList.remove('show');
+    }
+
+    function displayNews(limit = 4) {
+      showLoading();
+
+      setTimeout(() => {
+        hideLoading();
+        
+        const shuffled = [...newsData].sort(() => 0.5 - Math.random());
+        const selectedNews = shuffled.slice(0, limit);
+
+        selectedNews.forEach((news, index) => {
+          const newsItem = document.createElement('div');
+          newsItem.className = 'news-item fade-in';
+          newsItem.style.animationDelay = (index * 0.1) + 's';
+
+          newsItem.innerHTML = `
+            <div class="news-content">
+              <div class="news-text">
+                <h2 class="news-title">${news.title}</h2>
+                <p class="news-summary">${news.summary}</p>
+              </div>
+              <span class="time-badge">${news.time}</span>
+            </div>
+          `;
+
+          newsItem.addEventListener('click', () => openArticle(news));
+          newsFeed.appendChild(newsItem);
+        });
+      }, 1000);
+    }
+
+    function openArticle(article) {
+      modalTitle.textContent = article.title;
+      modalTime.textContent = article.time;
+      modalSource.textContent = article.source;
+
+      modalContent.innerHTML = '';
+      article.content.forEach(paragraph => {
+        const p = document.createElement('p');
+        p.textContent = paragraph;
+        modalContent.appendChild(p);
+      });
+
+      articleModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeArticleModal() {
+      articleModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function displayAllNews() {
+      allNewsContainer.innerHTML = '';
+
+      newsData.forEach((news, index) => {
+        const newsItem = document.createElement('div');
+        newsItem.className = 'all-news-item fade-in';
+        newsItem.style.animationDelay = (index * 0.05) + 's';
+
+        newsItem.innerHTML = `
+          <div class="all-news-content">
+            <div class="all-news-text">
+              <h2 class="news-title">${news.title}</h2>
+              <p class="news-summary">${news.summary}</p>
+            </div>
+            <div class="all-news-meta">
+              <span class="time-badge">${news.time}</span>
+              <span class="all-news-source">${news.source}</span>
+            </div>
+          </div>
+        `;
+
+        newsItem.addEventListener('click', () => {
+          closeAllNewsModal();
+          setTimeout(() => openArticle(news), 300);
+        });
+
+        allNewsContainer.appendChild(newsItem);
+      });
+
+      allNewsModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeAllNewsModal() {
+      allNewsModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    function handleRefresh() {
+      refreshBtn.classList.add('spinning');
+      refreshText.textContent = 'Refreshing...';
+      refreshBtn.disabled = true;
+
+      setTimeout(() => {
+        refreshBtn.classList.remove('spinning');
+        refreshText.textContent = 'Refresh';
+        refreshBtn.disabled = false;
+      }, 500);
+
+      displayNews(4);
+    }
+
+    // Event listeners
+    refreshBtn.addEventListener('click', handleRefresh);
+    viewAllBtn.addEventListener('click', displayAllNews);
+    closeModal.addEventListener('click', closeArticleModal);
+    closeAllNews.addEventListener('click', closeAllNewsModal);
+
+    // Close modals on outside click
+    articleModal.addEventListener('click', (e) => {
+      if (e.target === articleModal) closeArticleModal();
+    });
+
+    allNewsModal.addEventListener('click', (e) => {
+      if (e.target === allNewsModal) closeAllNewsModal();
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeArticleModal();
+        closeAllNewsModal();
+      }
+    });
+
+    // Initialize
+    displayNews(4);
+
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+      displayNews(4);
+    }, 300000);
+  </script>
+</body>
+</html>
