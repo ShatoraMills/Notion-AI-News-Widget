@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI News Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .title-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .cyber-glow {
+      box-shadow: 0 0 20px rgba(253, 242, 248, 0.7),
+                  0 0 40px rgba(253, 242, 248, 0.4),
+                  inset 0 0 10px rgba(253, 242, 248, 0.3);
+    }
+
+    .pink-cyber-glow {
+      text-shadow: 0 0 5px #fdf2f8, 0 0 10px #fdf2f8, 0 0 15px #fdf2f8;
+    }
+
+    .news-item:hover {
+      background-color: rgba(253, 242, 248, 0.1);
+      border-left: 3px solid #fdf2f8;
+      box-shadow: inset 0 0 10px rgba(253, 242, 248, 0.2);
+      cursor: pointer;
+    }
+
+    .news-item {
+      border-left: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .dot-pulse {
+      position: relative;
+      left: -9999px;
+      width: 6px;
+      height: 6px;
+      border-radius: 5px;
+      background-color: #fdf2f8;
+      color: #fdf2f8;
+      box-shadow: 0 0 15px #fdf2f8;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0.25s;
+    }
+
+    .dot-pulse::before, .dot-pulse::after {
+      content: '';
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 5px;
+      background-color: #fdf2f8;
+      box-shadow: 0 0 15px #fdf2f8;
+    }
+
+    .dot-pulse::before {
+      left: -12px;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0s;
+    }
+
+    .dot-pulse::after {
+      left: 12px;
+      animation: dot-pulse 1.5s infinite linear;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes dot-pulse {
+      0% {
+        box-shadow: 0 0 15px #fdf2f8;
+      }
+      50% {
+        box-shadow: 0 0 25px #fdf2f8, 0 0 40px rgba(253, 242, 248, 0.5);
+        background-color: #fff5fb;
+      }
+      100% {
+        box-shadow: 0 0 15px #fdf2f8;
+      }
+    }
+
+    .cyber-button {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .cyber-button:before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      z-index: -1;
+      background: linear-gradient(45deg, #fdf2f8, #fff5fb, #fdf2f8, #fff5fb);
+      background-size: 400%;
+      animation: cyber-border 3s linear infinite;
+      filter: blur(5px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .cyber-button:hover:before {
+      opacity: 1;
+    }
+
+    @keyframes cyber-border {
+      0% {
+        background-position: 0 0;
+      }
+      50% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0 0;
+      }
+    }
+
+    .tech-bg {
+      background-color: #0a0a0f;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(253, 242, 248, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(253, 242, 248, 0.08) 0%, transparent 25%);
+    }
+
+    .tech-border {
+      border-color: rgba(253, 242, 248, 0.3);
+    }
+
+    .time-badge {
+      background: linear-gradient(90deg, rgba(253, 242, 248, 0.2), rgba(253, 242, 248, 0.1));
+      border: 1px solid rgba(253, 242, 248, 0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background-color: #0a0a0f;
+      border-radius: 12px;
+      max-width: 90%;
+      width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      margin: auto;
+      padding: 24px;
+    }
+
+    .modal.show .modal-content {
+      transform: scale(1);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .loading-indicator {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .refresh-spin {
+      animation: spin 0.5s linear;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Specific widget styles */
+    .widget-container {
+      max-width: 28rem;
+      width: 100%;
+      background-color: black;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(to bottom right, #fce7f3, #f9a8d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo svg {
+      height: 20px;
+      width: 20px;
+      color: white;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      color: white;
+      letter-spacing: 0.05em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .live-indicator {
+      margin-left: 24px;
+      font-size: 12px;
+      color: #fce7f3;
+    }
+
+    .news-feed {
+      background-color: #0a0a0f;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(253, 242, 248, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(253, 242, 248, 0.08) 0%, transparent 25%);
+    }
+
+    .news-item {
+      padding: 16px;
+      border-left: 3px solid transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .news-item:not(:last-child) {
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+    }
+
+    .news-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .news-text {
+      flex: 1;
+      padding-right: 8px;
+    }
+
+    .news-title {
+      color: white;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+
+    .news-summary {
+      color: #9ca3af;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .time-badge {
+      font-size: 12px;
+      color: #fce7f3;
+      white-space: nowrap;
+    }
+
+    .footer {
+      padding: 16px;
+      background-color: #0a0a0f;
+      border-top: 1px solid rgba(253, 242, 248, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .refresh-btn {
+      color: #fce7f3;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      color: white;
+    }
+
+    .refresh-btn svg {
+      height: 16px;
+      width: 16px;
+      margin-right: 4px;
+      transition: transform 0.5s ease;
+    }
+
+    .view-all-btn {
+      background: linear-gradient(to right, #fce7f3, #f9a8d4);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.025em;
+      transition: all 0.3s ease;
+    }
+
+    .view-all-btn:hover {
+      background: linear-gradient(to right, #f9a8d4, #fce7f3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      color: #fce7f3;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: white;
+    }
+
+    .close-btn svg {
+      height: 24px;
+      width: 24px;
+    }
+
+    .modal-meta {
+      margin-bottom: 16px;
+    }
+
+    .modal-time {
+      font-size: 12px;
+      color: #fce7f3;
+    }
+
+    .modal-source {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-left: 8px;
+    }
+
+    .modal-body {
+      color: #d1d5db;
+    }
+
+    .modal-body p {
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .all-news-container {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .all-news-item {
+      padding: 16px;
+      border-bottom: 1px solid rgba(253, 242, 248, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .all-news-item:hover {
+      background-color: rgba(253, 242, 248, 0.1);
+    }
+
+    .all-news-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .all-news-text {
+      flex: 1;
+      padding-right: 16px;
+    }
+
+    .all-news-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .all-news-source {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 640px) {
+      .widget-container {
+        max-width: 100%;
+        margin: 8px;
+      }
+      
+      .modal-content {
+        max-width: 95%;
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+  <div class="widget-container cyber-glow tech-bg">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="logo cyber-glow">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <h1 class="title pink-cyber-glow title-font">AI PULSE</h1>
+        </div>
+        <div class="header-right">
+          <div class="dot-pulse"></div>
+          <span class="live-indicator pink-cyber-glow title-font">LIVE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Feed -->
+    <div id="news-feed" class="news-feed">
+      <div class="loading-indicator" id="loading-indicator">
+        <div class="dot-pulse"></div>
+        <span style="margin-left: 24px; font-size: 12px; color: #fce7f3;">Loading news...</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button id="refresh-btn" class="refresh-btn pink-cyber-glow">
+        <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span id="refresh-text">Refresh</span>
+      </button>
+      <button id="view-all-btn" class="view-all-btn cyber-button cyber-glow title-font">
+        View All
+      </button>
+    </div>
+  </div>
+
+  <!-- Article Modal -->
+  <div id="article-modal" class="modal">
+    <div class="modal-content cyber-glow tech-bg">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title pink-cyber-glow"></h2>
+        <button id="close-modal" class="close-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-meta">
+        <span id="modal-time" class="modal-time time-badge"></span>
+        <span id="modal-source" class="modal-source"></span>
+      </div>
+      <div id="modal-content" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- All News Modal -->
+  <div id="all-news-modal" class="modal">
+    <div class="modal-content cyber-glow tech-bg">
+      <div class="modal-header">
+        <h2 class="modal-title pink-cyber-glow title-font">All AI News</h2>
+        <button id="close-all-news" class="close-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="all-news-container" class="all-news-container"></div>
+    </div>
+  </div>
+
+  <script>
+    // Sample news data
+    const newsData = [
+      {
+        id: 1,
+        title: "GPT-5 Rumors Surface",
+        summary: "Sources suggest OpenAI's next model will feature multimodal capabilities beyond current expectations.",
+        time: "2h ago",
+        source: "AI Insider",
+        content: [
+          "Industry insiders have begun circulating rumors about OpenAI's next flagship model, tentatively called GPT-5. According to multiple sources familiar with the project, the new model will represent a significant leap forward in multimodal capabilities.",
+          "\"What we're hearing is that GPT-5 will process and generate content across text, images, audio, and potentially video in a much more integrated way than current models,\" said one anonymous source close to the development team.",
+          "OpenAI has not officially commented on these rumors, maintaining their policy of not discussing products still in development. However, the company's CEO has previously hinted at 'groundbreaking advancements' coming in the next generation of their AI systems."
+        ]
+      },
+      {
+        id: 2,
+        title: "AI Regulation Framework",
+        summary: "EU announces comprehensive guidelines for responsible AI development and deployment.",
+        time: "5h ago",
+        source: "Tech Policy Today",
+        content: [
+          "The European Union has unveiled a new comprehensive framework for regulating artificial intelligence development and deployment across member states. The guidelines aim to ensure AI systems are developed responsibly while fostering innovation in the rapidly evolving field.",
+          "Key aspects of the framework include mandatory risk assessments for high-risk AI applications, transparency requirements for AI-generated content, and strict limitations on facial recognition technology in public spaces.",
+          "\"This framework strikes a balance between protecting citizens and allowing European companies to remain competitive in the global AI race,\" said EU Commissioner for Digital Affairs. Industry leaders have generally responded positively, though some have expressed concerns about implementation costs."
+        ]
+      },
+      {
+        id: 3,
+        title: "Breakthrough in AI Ethics",
+        summary: "Research team develops new method for detecting and mitigating bias in large language models.",
+        time: "8h ago",
+        source: "AI Research Weekly",
+        content: [
+          "A team of researchers from Stanford and MIT have announced a breakthrough method for detecting and mitigating bias in large language models. The new approach, called 'Perspective Balancing,' allows AI systems to identify potential biases in their outputs and automatically adjust to provide more balanced responses.",
+          "\"Traditional debiasing methods often struggle with nuanced forms of bias,\" explained Dr. Sarah Chen, lead researcher on the project. \"Our approach teaches the model to recognize when it's viewing a topic from a limited perspective and actively seek alternative viewpoints.\"",
+          "Early tests show the method reduces measurable bias by up to 43% while maintaining or even improving overall performance on standard benchmarks. The team has released their methodology as an open-source toolkit that can be applied to existing language models."
+        ]
+      },
+      {
+        id: 4,
+        title: "AI-Generated Art Wins Award",
+        summary: "For the first time, an AI-human collaborative piece takes top prize at international exhibition.",
+        time: "12h ago",
+        source: "Digital Arts Magazine",
+        content: [
+          "In a historic first, an artwork created through collaboration between an artist and an AI system has won the prestigious International Digital Art Award. The piece, titled 'Emergent Consciousness,' was created by artist Maya Rodriguez working with a custom-trained generative AI system.",
+          "\"I see the AI as my creative partner,\" Rodriguez explained at the award ceremony. \"I provided the conceptual direction and artistic refinement, while the AI helped generate unexpected patterns and textures that I could never have created alone.\"",
+          "The judges praised the work for its technical innovation and emotional depth. \"This piece challenges our understanding of creativity itself,\" noted the head judge. \"It represents a new frontier where human and machine intelligence combine to create something truly novel.\""
+        ]
+      },
+      {
+        id: 5,
+        title: "New AI Chip Promises 5x Performance",
+        summary: "Startup unveils specialized hardware that dramatically accelerates AI inference while reducing power consumption.",
+        time: "1d ago",
+        source: "Hardware Insights",
+        content: [
+          "Silicon Valley startup QuantumCore has unveiled a new AI accelerator chip that promises to deliver five times the performance of current market leaders while consuming only half the power. The QC-1 chip uses a novel architecture specifically designed for transformer-based AI models.",
+          "\"We've completely reimagined how AI computations are handled at the hardware level,\" said QuantumCore's CTO. \"Our approach eliminates many of the bottlenecks that limit performance in traditional GPU and TPU designs.\"",
+          "Early benchmarks show impressive results, particularly for large language model inference. Several major cloud providers have already announced plans to incorporate the chips into their AI offerings by the end of the year."
+        ]
+      },
+      {
+        id: 6,
+        title: "AI Assists Major Medical Discovery",
+        summary: "Machine learning system helps identify potential treatment for rare genetic disorder.",
+        time: "1d ago",
+        source: "Medical Innovation Journal",
+        content: [
+          "Researchers at Johns Hopkins University have announced a potential breakthrough in treating a rare genetic disorder, with artificial intelligence playing a crucial role in the discovery. The AI system analyzed thousands of compounds and identified several that showed promise in addressing the underlying mechanisms of the disease.",
+          "\"Without AI, this discovery process would have taken years longer,\" explained Dr. James Wilson, who led the research team. \"The system identified patterns in the data that would have been nearly impossible for human researchers to spot on their own.\"",
+          "The most promising compound has already entered pre-clinical testing, with human trials potentially beginning within 18 months. This represents one of the most significant examples to date of AI directly contributing to a medical breakthrough."
+        ]
+      }
+    ];
+
+    // DOM elements - ALL PROPERLY DEFINED
+    const newsFeed = document.getElementById('news-feed');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const refreshIcon = document.getElementById('refresh-icon');
+    const refreshText = document.getElementById('refresh-text');
+    const viewAllBtn = document.getElementById('view-all-btn');
+    const articleModal = document.getElementById('article-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalTime = document.getElementById('modal-time');
+    const modalSource = document.getElementById('modal-source');
+    const modalContent = document.getElementById('modal-content');
+    const closeModal = document.getElementById('close-modal');
+    const allNewsModal = document.getElementById('all-news-modal');
+    const allNewsContainer = document.getElementById('all-news-container');
+    const closeAllNews = document.getElementById('close-all-news');
+
+    // Function to display news items
+    function displayNews(limit = 4) {
+      // Clear current news
+      newsFeed.innerHTML = '';
+
+      // Show loading indicator
+      loadingIndicator.style.display = 'flex';
+      newsFeed.appendChild(loadingIndicator);
+
+      // Simulate loading delay
+      setTimeout(() => {
+        loadingIndicator.style.display = 'none';
+
+        // Get a random subset of news to simulate "fresh" news
+        const shuffled = [...newsData].sort(() => 0.5 - Math.random());
+        const selectedNews = shuffled.slice(0, limit);
+
+        // Create and append news items
+        selectedNews.forEach((news, index) => {
+          const isLast = index === selectedNews.length - 1;
+          const newsItem = document.createElement('div');
+          newsItem.className = `news-item ${isLast ? '' : 'border-b tech-border'} fade-in`;
+          newsItem.style.animationDelay = `${index * 0.1}s`;
+
+          newsItem.innerHTML = `
+            <div class="news-content">
+              <div class="news-text">
+                <h2 class="news-title">${news.title}</h2>
+                <p class="news-summary">${news.summary}</p>
+              </div>
+              <span class="time-badge">${news.time}</span>
+            </div>
+          `;
+
+          // Add click event to open article
+          newsItem.addEventListener('click', () => {
+            openArticle(news);
+          });
+
+          newsFeed.appendChild(newsItem);
+        });
+      }, 800);
+    }
+
+    // Function to open article modal
+    function openArticle(article) {
+      modalTitle.textContent = article.title;
+      modalTime.textContent = article.time;
+      modalSource.textContent = article.source;
+
+      // Clear previous content
+      modalContent.innerHTML = '';
+
+      // Add paragraphs
+      article.content.forEach(paragraph => {
+        const p = document.createElement('p');
+        p.textContent = paragraph;
+        modalContent.appendChild(p);
+      });
+
+      // Show modal
+      articleModal.classList.add('show');
+
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Function to display all news
+    function displayAllNews() {
+      // Clear container
+      allNewsContainer.innerHTML = '';
+
+      // Add all news items
+      newsData.forEach(news => {
+        const newsItem = document.createElement('div');
+        newsItem.className = 'all-news-item';
+
+        newsItem.innerHTML = `
+          <div class="all-news-content">
+            <div class="all-news-text">
+              <h2 class="news-title">${news.title}</h2>
+              <p class="news-summary">${news.summary}</p>
+            </div>
+            <div class="all-news-meta">
+              <span class="time-badge">${news.time}</span>
+              <span class="all-news-source">${news.source}</span>
+            </div>
+          </div>
+        `;
+
+        // Add click event to open article
+        newsItem.addEventListener('click', () => {
+          closeAllNewsModal();
+          setTimeout(() => {
+            openArticle(news);
+          }, 300);
+        });
+
+        allNewsContainer.appendChild(newsItem);
+      });
+
+      // Show modal
+      allNewsModal.classList.add('show');
+
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Function to close article modal
+    function closeArticleModal() {
+      articleModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Function to close all news modal
+    function closeAllNewsModal() {
+      allNewsModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Function to simulate refresh with visual feedback
+    function handleRefresh() {
+      // Add spinning animation to refresh icon
+      refreshIcon.classList.add('refresh-spin');
+      refreshText.textContent = 'Refreshing...';
+      refreshBtn.disabled = true;
+
+      // Reset animation after completion
+      setTimeout(() => {
+        refreshIcon.classList.remove('refresh-spin');
+        refreshText.textContent = 'Refresh';
+        refreshBtn.disabled = false;
+      }, 500);
+
+      // Load new news
+      displayNews(4);
+    }
+
+    // ALL EVENT LISTENERS PROPERLY DEFINED
+    closeModal.addEventListener('click', closeArticleModal);
+    closeAllNews.addEventListener('click', closeAllNewsModal);
+
+    // Close modal when clicking outside modal content
+    articleModal.addEventListener('click', e => {
+      if (e.target === articleModal) closeArticleModal();
+    });
+
+    allNewsModal.addEventListener('click', e => {
+      if (e.target === allNewsModal) closeAllNewsModal();
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeArticleModal();
+        closeAllNewsModal();
+      }
+    });
+
+    // Refresh button click with enhanced animation
+    refreshBtn.addEventListener('click', handleRefresh);
+
+    // Show all news button click
+    viewAllBtn.addEventListener('click', displayAllNews);
+
+    // Auto-refresh every 5 minutes to simulate live updates
+    setInterval(() => {
+      displayNews(4);
+    }, 300000);
+
+    // Initial news load
+    displayNews(4);
+  </script>
+</body>
+</html>
